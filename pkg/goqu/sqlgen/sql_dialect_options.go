@@ -349,7 +349,8 @@ const (
 	UpdateFromSQLFragment
 	ReturningSQLFragment
 	InsertBeginSQLFragment
-	InsertSQLFragment
+	InsertColsSQLFragment
+	InsertValsSQLFragment
 	DeleteBeginSQLFragment
 	TruncateSQLFragment
 	WindowSQLFragment
@@ -396,6 +397,10 @@ func (sf SQLFragmentType) String() string {
 		return "ReturningSQLFragment"
 	case InsertBeginSQLFragment:
 		return "InsertBeginSQLFragment"
+	case InsertColsSQLFragment:
+		return "InsertColsSQLFragment"
+	case InsertValsSQLFragment:
+		return "InsertValsSQLFragment"
 	case DeleteBeginSQLFragment:
 		return "DeleteBeginSQLFragment"
 	case TruncateSQLFragment:
@@ -588,7 +593,8 @@ func DefaultDialectOptions() *SQLDialectOptions {
 			CommonTableSQLFragment,
 			InsertBeginSQLFragment,
 			IntoSQLFragment,
-			InsertSQLFragment,
+			InsertColsSQLFragment,
+			InsertValsSQLFragment,
 			ReturningSQLFragment,
 		},
 		DeleteSQLOrder: []SQLFragmentType{

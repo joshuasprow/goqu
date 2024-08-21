@@ -42,28 +42,31 @@ func NewInsertSQLGenerator(dialect string, do *SQLDialectOptions) InsertSQLGener
 
 func (isg *insertSQLGenerator) Generate(
 	b sb.SQLBuilder,
-	clauses exp.InsertClauses,
+	ic exp.InsertClauses,
 ) {
-	if !clauses.HasInto() {
+	if !ic.HasInto() {
 		b.SetError(ErrNoSourceForInsert)
 		return
 	}
+
 	for _, f := range isg.DialectOptions().InsertSQLOrder {
 		if b.Error() != nil {
 			return
 		}
 		switch f {
 		case CommonTableSQLFragment:
-			isg.ExpressionSQLGenerator().Generate(b, clauses.CommonTables())
+			isg.ExpressionSQLGenerator().Generate(b, ic.CommonTables())
 		case InsertBeginSQLFragment:
-			isg.InsertBeginSQL(b, clauses.OnConflict())
+			isg.InsertBeginSQL(b, ic.OnConflict())
 		case IntoSQLFragment:
 			b.WriteRunes(isg.DialectOptions().SpaceRune)
-			isg.ExpressionSQLGenerator().Generate(b, clauses.Into())
-		case InsertSQLFragment:
-			isg.InsertSQL(b, clauses)
+			isg.ExpressionSQLGenerator().Generate(b, ic.Into())
+		case InsertColsSQLFragment:
+			isg.InsertColumnsSQL(b, ic)
+		case InsertValsSQLFragment:
+			isg.InsertValuesSQL(b, ic)
 		case ReturningSQLFragment:
-			isg.ReturningSQL(b, clauses.Returning())
+			isg.ReturningSQL(b, ic.Returning())
 		default:
 			b.SetError(ErrNotSupportedFragment("INSERT", f))
 		}
@@ -80,7 +83,7 @@ func (isg *insertSQLGenerator) InsertBeginSQL(b sb.SQLBuilder, o exp.ConflictExp
 }
 
 // Adds the columns list to an insert statement
-func (isg *insertSQLGenerator) InsertSQL(b sb.SQLBuilder, ic exp.InsertClauses) {
+func (isg *insertSQLGenerator) InsertColumnsSQL(b sb.SQLBuilder, ic exp.InsertClauses) {
 	switch {
 	case ic.HasRows():
 		ie, err := exp.NewInsertExpression(ic.Rows()...)
@@ -88,12 +91,37 @@ func (isg *insertSQLGenerator) InsertSQL(b sb.SQLBuilder, ic exp.InsertClauses) 
 			b.SetError(err)
 			return
 		}
-		isg.InsertExpressionSQL(b, ie)
+		switch {
+		case ie.IsInsertFrom():
+			isg.insertFromSQL(b, ie.From())
+		case len(ie.Cols().Columns()) > 0:
+			isg.insertColumnsSQL(b, ie.Cols())
+		}
 	case ic.HasCols() && ic.HasVals():
 		isg.insertColumnsSQL(b, ic.Cols())
-		isg.insertValuesSQL(b, ic.Vals())
 	case ic.HasCols() && ic.HasFrom():
 		isg.insertColumnsSQL(b, ic.Cols())
+	}
+}
+
+// Adds the values list to an insert statement
+func (isg *insertSQLGenerator) InsertValuesSQL(b sb.SQLBuilder, ic exp.InsertClauses) {
+	switch {
+	case ic.HasRows():
+		ie, err := exp.NewInsertExpression(ic.Rows()...)
+		if err != nil {
+			b.SetError(err)
+			return
+		}
+		switch {
+		case ie.IsEmpty():
+			isg.defaultValuesSQL(b)
+		case len(ie.Vals()) > 0:
+			isg.insertValuesSQL(b, ie.Vals())
+		}
+	case ic.HasCols() && ic.HasVals():
+		isg.insertValuesSQL(b, ic.Vals())
+	case ic.HasCols() && ic.HasFrom():
 		isg.insertFromSQL(b, ic.From())
 	case ic.HasFrom():
 		isg.insertFromSQL(b, ic.From())
@@ -105,18 +133,6 @@ func (isg *insertSQLGenerator) InsertSQL(b sb.SQLBuilder, ic exp.InsertClauses) 
 		isg.ExpressionSQLGenerator().Generate(b, ic.Alias())
 	}
 	isg.onConflictSQL(b, ic.OnConflict())
-}
-
-func (isg *insertSQLGenerator) InsertExpressionSQL(b sb.SQLBuilder, ie exp.InsertExpression) {
-	switch {
-	case ie.IsInsertFrom():
-		isg.insertFromSQL(b, ie.From())
-	case ie.IsEmpty():
-		isg.defaultValuesSQL(b)
-	default:
-		isg.insertColumnsSQL(b, ie.Cols())
-		isg.insertValuesSQL(b, ie.Vals())
-	}
 }
 
 // Adds the DefaultValuesFragment to an SQL statement
