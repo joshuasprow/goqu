@@ -388,12 +388,42 @@ func (sst *sqlserverTest) TestInsert() {
 	sst.Len(newEntries, 4)
 }
 
-func (sst *sqlserverTest) TestInsertReturningProducesError() {
+func (sst *sqlserverTest) TestInsertReturning() {
 	ds := sst.db.From("entry")
-	now := time.Now()
-	e := entry{Int: 10, Float: 1.000000, String: "1.000000", Time: now, Bool: true, Bytes: []byte("1.000000")}
-	_, err := ds.Insert().Rows(e).Returning(goqu.Star()).Executor().ScanStruct(&e)
-	sst.Error(err)
+	now := time.Now().Truncate(time.Second)
+	expected := entry{
+		Int:    10,
+		Float:  1.000000,
+		String: "1.000000",
+		Time:   now,
+		Bool:   true,
+		Bytes:  []byte("1.000000"),
+	}
+	actual := entry{}
+	_, err := ds.Insert().Rows(goqu.Record{
+		"Int":    expected.Int,
+		"Float":  expected.Float,
+		"String": expected.String,
+		"Time":   expected.Time,
+		"Bool":   expected.Bool,
+		"Bytes":  goqu.Cast(goqu.V(expected.Bytes), "BINARY(8)"),
+	}).Returning(
+		goqu.I("inserted.id"),
+		goqu.I("inserted.int"),
+		goqu.I("inserted.float"),
+		goqu.I("inserted.string"),
+		goqu.I("inserted.time"),
+		goqu.I("inserted.bool"),
+		goqu.I("inserted.bytes"),
+	).Executor().ScanStruct(&actual)
+	sst.NoError(err)
+	sst.NotEqual(expected.ID, actual.ID)
+	sst.Equal(expected.Int, actual.Int)
+	sst.Equal(expected.Float, actual.Float)
+	sst.Equal(expected.String, actual.String)
+	sst.Equal(expected.Time.UTC(), actual.Time.UTC())
+	sst.Equal(expected.Bool, actual.Bool)
+	sst.Equal(expected.Bytes, actual.Bytes)
 }
 
 func (sst *sqlserverTest) TestUpdate() {
@@ -413,14 +443,18 @@ func (sst *sqlserverTest) TestUpdate() {
 
 func (sst *sqlserverTest) TestUpdateReturning() {
 	ds := sst.db.From("entry")
-	var id uint32
-	_, err := ds.Where(goqu.C("int").Eq(11)).
+	e := entry{}
+	_, err := ds.Where(goqu.C("int").Eq(9)).
 		Update().
-		Set(goqu.Record{"int": 9}).
-		Returning("id").
-		Executor().ScanVal(&id)
-	sst.Error(err)
-	sst.EqualError(err, "goqu: dialect does not support RETURNING clause [dialect=sqlserver]")
+		Set(goqu.Record{"int": 11}).
+		Returning(
+			goqu.I("inserted.id"),
+			goqu.I("inserted.int"),
+		).
+		Executor().ScanStruct(&e)
+	sst.NoError(err)
+	sst.Equal(uint32(10), e.ID)
+	sst.Equal(11, e.Int)
 }
 
 func (sst *sqlserverTest) TestDelete() {
@@ -448,8 +482,9 @@ func (sst *sqlserverTest) TestDelete() {
 	sst.NotEqual(0, e.ID)
 
 	id = 0
-	_, err = ds.Where(goqu.C("id").Eq(e.ID)).Delete().Returning("id").Executor().ScanVal(&id)
-	sst.EqualError(err, "goqu: dialect does not support RETURNING clause [dialect=sqlserver]")
+	_, err = ds.Where(goqu.C("id").Eq(e.ID)).Delete().Returning(goqu.I("deleted.id")).Executor().ScanVal(&id)
+	sst.NoError(err)
+	sst.Equal(e.ID, id)
 }
 
 func (sst *sqlserverTest) TestInsertIgnoreNotSupported() {
