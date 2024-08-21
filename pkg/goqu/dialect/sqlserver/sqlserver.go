@@ -12,7 +12,7 @@ func DialectOptions() *goqu.SQLDialectOptions {
 	opts.BooleanDataTypeSupported = false
 	opts.UseLiteralIsBools = false
 
-	opts.SupportsReturn = false
+	opts.SupportsReturn = true
 	opts.SupportsOrderByOnUpdate = false
 	opts.SupportsLimitOnUpdate = false
 	opts.SupportsLimitOnDelete = false
@@ -62,6 +62,16 @@ func DialectOptions() *goqu.SQLDialectOptions {
 
 	opts.FetchFragment = []byte(" FETCH FIRST ")
 
+	opts.DeleteSQLOrder = []sqlgen.SQLFragmentType{
+		sqlgen.CommonTableSQLFragment,
+		sqlgen.DeleteBeginSQLFragment,
+		sqlgen.FromSQLFragment,
+		sqlgen.ReturningSQLFragment,
+		sqlgen.WhereSQLFragment,
+		sqlgen.OrderSQLFragment,
+		sqlgen.LimitSQLFragment,
+	}
+
 	opts.SelectSQLOrder = []sqlgen.SQLFragmentType{
 		sqlgen.CommonTableSQLFragment,
 		sqlgen.SelectWithLimitSQLFragment,
@@ -74,6 +84,17 @@ func DialectOptions() *goqu.SQLDialectOptions {
 		sqlgen.CompoundsSQLFragment,
 		sqlgen.OrderWithOffsetFetchSQLFragment,
 		sqlgen.ForSQLFragment,
+	}
+
+	opts.UpdateSQLOrder = []sqlgen.SQLFragmentType{
+		sqlgen.CommonTableSQLFragment,
+		sqlgen.UpdateBeginSQLFragment,
+		sqlgen.SourcesSQLFragment,
+		sqlgen.UpdateSQLFragment,
+		sqlgen.ReturningSQLFragment,
+		sqlgen.WhereSQLFragment,
+		sqlgen.OrderSQLFragment,
+		sqlgen.LimitSQLFragment,
 	}
 
 	opts.EscapedRunes = map[rune][]byte{
@@ -90,6 +111,7 @@ func DialectOptions() *goqu.SQLDialectOptions {
 	opts.ConflictFragment = []byte("")
 	opts.ConflictDoUpdateFragment = []byte("")
 	opts.ConflictDoNothingFragment = []byte("")
+	opts.ReturningFragment = []byte(" OUTPUT ")
 
 	return opts
 }
