@@ -88,10 +88,10 @@ func (ssgs *selectSQLGeneratorSuite) TestGenerate() {
 
 func (ssgs *selectSQLGeneratorSuite) TestGenerate_UnsupportedFragment() {
 	opts := sqlgen.DefaultDialectOptions()
-	opts.SelectSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeingSQLFragment}
+	opts.SelectSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeginSQLFragment}
 
 	sc := exp.NewSelectClauses().SetFrom(exp.NewColumnListExpression("test"))
-	expectedErr := "goqu: unsupported SELECT SQL fragment InsertBeingSQLFragment"
+	expectedErr := "goqu: unsupported SELECT SQL fragment InsertBeginSQLFragment"
 	ssgs.assertCases(
 		sqlgen.NewSelectSQLGenerator("test", opts),
 		selectTestCase{clause: sc, err: expectedErr},
@@ -101,7 +101,7 @@ func (ssgs *selectSQLGeneratorSuite) TestGenerate_UnsupportedFragment() {
 
 func (ssgs *selectSQLGeneratorSuite) TestGenerate_WithErroredBuilder() {
 	opts := sqlgen.DefaultDialectOptions()
-	opts.SelectSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeingSQLFragment}
+	opts.SelectSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeginSQLFragment}
 	d := sqlgen.NewSelectSQLGenerator("test", opts)
 
 	b := sb.NewSQLBuilder(true).SetError(errors.New("test error"))

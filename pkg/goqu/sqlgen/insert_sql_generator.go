@@ -55,7 +55,7 @@ func (isg *insertSQLGenerator) Generate(
 		switch f {
 		case CommonTableSQLFragment:
 			isg.ExpressionSQLGenerator().Generate(b, clauses.CommonTables())
-		case InsertBeingSQLFragment:
+		case InsertBeginSQLFragment:
 			isg.InsertBeginSQL(b, clauses.OnConflict())
 		case IntoSQLFragment:
 			b.WriteRunes(isg.DialectOptions().SpaceRune)

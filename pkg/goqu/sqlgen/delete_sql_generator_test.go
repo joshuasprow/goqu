@@ -70,14 +70,14 @@ func (dsgs *deleteSQLGeneratorSuite) TestGenerate() {
 
 func (dsgs *deleteSQLGeneratorSuite) TestGenerate_withUnsupportedFragment() {
 	opts := sqlgen.DefaultDialectOptions()
-	opts.DeleteSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeingSQLFragment}
+	opts.DeleteSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeginSQLFragment}
 	dc := exp.NewDeleteClauses().
 		SetFrom(exp.NewIdentifierExpression("", "test", ""))
 
 	dsgs.assertCases(
 		sqlgen.NewDeleteSQLGenerator("test", opts),
-		deleteTestCase{clause: dc, err: `goqu: unsupported DELETE SQL fragment InsertBeingSQLFragment`},
-		deleteTestCase{clause: dc, err: `goqu: unsupported DELETE SQL fragment InsertBeingSQLFragment`, isPrepared: true},
+		deleteTestCase{clause: dc, err: `goqu: unsupported DELETE SQL fragment InsertBeginSQLFragment`},
+		deleteTestCase{clause: dc, err: `goqu: unsupported DELETE SQL fragment InsertBeginSQLFragment`, isPrepared: true},
 	)
 }
 

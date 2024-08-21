@@ -49,12 +49,12 @@ func (usgs *updateSQLGeneratorSuite) TestDialect() {
 
 func (usgs *updateSQLGeneratorSuite) TestGenerate_unsupportedFragment() {
 	opts := sqlgen.DefaultDialectOptions()
-	opts.UpdateSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeingSQLFragment}
+	opts.UpdateSQLOrder = []sqlgen.SQLFragmentType{sqlgen.InsertBeginSQLFragment}
 
 	uc := exp.NewUpdateClauses().
 		SetTable(exp.NewIdentifierExpression("", "test", "")).
 		SetSetValues(exp.Record{"a": "b", "b": "c"})
-	expectedErr := "goqu: unsupported UPDATE SQL fragment InsertBeingSQLFragment"
+	expectedErr := "goqu: unsupported UPDATE SQL fragment InsertBeginSQLFragment"
 	usgs.assertCases(
 		sqlgen.NewUpdateSQLGenerator("test", opts),
 		updateTestCase{clause: uc, err: expectedErr},

@@ -300,7 +300,7 @@ type (
 		// The order of SQL fragments when creating an INSERT statement
 		// (Default=[]SQLFragmentType{
 		// 		CommonTableSQLFragment,
-		// 		InsertBeingSQLFragment,
+		// 		InsertBeginSQLFragment,
 		// 		SourcesSQLFragment,
 		// 		InsertSQLFragment,
 		// 		ReturningSQLFragment,
@@ -348,7 +348,7 @@ const (
 	UpdateSQLFragment
 	UpdateFromSQLFragment
 	ReturningSQLFragment
-	InsertBeingSQLFragment
+	InsertBeginSQLFragment
 	InsertSQLFragment
 	DeleteBeginSQLFragment
 	TruncateSQLFragment
@@ -394,8 +394,8 @@ func (sf SQLFragmentType) String() string {
 		return "UpdateFromSQLFragment"
 	case ReturningSQLFragment:
 		return "ReturningSQLFragment"
-	case InsertBeingSQLFragment:
-		return "InsertBeingSQLFragment"
+	case InsertBeginSQLFragment:
+		return "InsertBeginSQLFragment"
 	case DeleteBeginSQLFragment:
 		return "DeleteBeginSQLFragment"
 	case TruncateSQLFragment:
@@ -586,7 +586,7 @@ func DefaultDialectOptions() *SQLDialectOptions {
 		},
 		InsertSQLOrder: []SQLFragmentType{
 			CommonTableSQLFragment,
-			InsertBeingSQLFragment,
+			InsertBeginSQLFragment,
 			IntoSQLFragment,
 			InsertSQLFragment,
 			ReturningSQLFragment,
